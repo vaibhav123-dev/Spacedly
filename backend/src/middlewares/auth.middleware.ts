@@ -5,6 +5,10 @@ import { generateAccessToken } from '../helpers/auth';
 
 export interface CustomRequest extends Request {
   user?: { id: number; email: string };
+  body: any;
+  params: any;
+  files?: any;
+  cookies: any;
 }
 
 // Helper to send 401
@@ -70,8 +74,8 @@ export const authMiddleware = async (
 
     res.cookie('accessToken', newAccessToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 15 * 60 * 1000, // 15 min
     });
 
