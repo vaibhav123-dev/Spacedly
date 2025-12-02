@@ -1,6 +1,8 @@
 import {
   createUserSchema,
   loginUserSchema,
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from '../validations/user.validation';
 import { Request, Response } from 'express';
 import {
@@ -8,6 +10,8 @@ import {
   userRegister,
   initiateTwoFactorAuth,
   verifyTwoFactorOtp,
+  forgotPasswordService,
+  resetPasswordService,
 } from '../services/user.service';
 import ApiResponse from '../utils/apiResponse';
 import asyncWrapper from '../utils/asyncWrapper';
@@ -18,6 +22,7 @@ import HTTP_STATUS from '../constants';
 import { sendEmail } from '../utils/emailUtil';
 import { generateAccessToken, generateRefreshToken } from '../helpers/auth';
 import { setAuthCookies } from '../utils/cookieUtil';
+import { passwordResetTemplate } from '../helpers/emailTemplates';
 
 export const registerUser = asyncWrapper(
   async (req: Request, res: Response) => {
@@ -136,5 +141,51 @@ export const googleAuthCallback = asyncWrapper(
 
     // Redirect to frontend dashboard
     res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+  },
+);
+
+export const forgotPassword = asyncWrapper(
+  async (req: Request, res: Response) => {
+    const { email } = req.body;
+
+    await forgotPasswordSchema.validateAsync({ email });
+
+    const result = await forgotPasswordService(email);
+
+    // If user exists, send email
+    if (result.user) {
+      const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${result.resetToken}`;
+
+      const emailHtml = passwordResetTemplate(resetUrl, result.user.name);
+
+      await sendEmail(
+        result.user.email,
+        'Password Reset Request - Spacedly',
+        emailHtml,
+      );
+    }
+
+    // Always return success message for security (don't reveal if email exists)
+    return ApiResponse.success(
+      res,
+      {},
+      'If the email exists, a password reset link has been sent',
+    );
+  },
+);
+
+export const resetPassword = asyncWrapper(
+  async (req: Request, res: Response) => {
+    const { token, password } = req.body;
+
+    await resetPasswordSchema.validateAsync({ token, password });
+
+    await resetPasswordService(token, password);
+
+    return ApiResponse.success(
+      res,
+      {},
+      'Password has been reset successfully. Please login with your new password.',
+    );
   },
 );

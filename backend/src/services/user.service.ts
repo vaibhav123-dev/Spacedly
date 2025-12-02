@@ -7,6 +7,7 @@ import {
   hashPassword,
 } from '../helpers/auth';
 import HTTP_STATUS from '../constants';
+import crypto from 'crypto';
 
 export const userRegister = async ({ name, email, password }) => {
   const existingUser = await User.findOne({ where: { email } });
@@ -98,5 +99,70 @@ export const verifyTwoFactorOtp = async (email: string, otp: string) => {
       email: user.email,
       is_two_factor_enabled: user.is_two_factor_enabled,
     },
+  };
+};
+
+export const forgotPasswordService = async (email: string) => {
+  const user = await User.findOne({ where: { email } });
+
+  // Don't reveal if user exists for security reasons
+  if (!user) {
+    return {
+      message: 'If the email exists, a password reset link has been sent',
+    };
+  }
+
+  // Generate reset token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+
+  // Hash token before saving (optional but recommended)
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  // Set token and expiration (1 hour)
+  user.reset_password_token = hashedToken;
+  user.reset_password_expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await user.save();
+
+  return {
+    resetToken, // Return unhashed token to send in email
+    user,
+  };
+};
+
+export const resetPasswordService = async (
+  token: string,
+  newPassword: string,
+) => {
+  // Hash the provided token to match with database
+  const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    where: { reset_password_token: hashedToken },
+  });
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid or expired reset token');
+  }
+
+  // Check if token has expired
+  if (new Date() > new Date(user.reset_password_expires!)) {
+    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Reset token has expired');
+  }
+
+  // Hash new password
+  const hashedPassword = await hashPassword(newPassword);
+
+  // Update password and clear reset token fields
+  user.password = hashedPassword;
+  user.reset_password_token = null;
+  user.reset_password_expires = null;
+  user.refresh_token = null; // Logout all sessions
+  await user.save();
+
+  return {
+    message: 'Password has been reset successfully',
   };
 };

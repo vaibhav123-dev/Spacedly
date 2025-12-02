@@ -12,6 +12,8 @@ class User extends Model {
   public two_factor_otp_expiry!: Date | null;
   public google_id!: string | null;
   public auth_provider!: 'local' | 'google';
+  public reset_password_token!: string | null;
+  public reset_password_expires!: Date | null;
 
   // timestamps!
   public readonly createdAt!: Date;
@@ -63,6 +65,15 @@ User.init(
       type: DataTypes.ENUM('local', 'google'),
       allowNull: false,
       defaultValue: 'local',
+    },
+    reset_password_token: {
+      type: DataTypes.STRING,
+      allowNull: true,
+      unique: true,
+    },
+    reset_password_expires: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   { modelName: 'User', timestamps: true, tableName: 'users', sequelize },

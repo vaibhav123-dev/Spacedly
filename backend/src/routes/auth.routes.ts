@@ -1,6 +1,10 @@
 import express from 'express';
 import passport from '../config/passport';
-import { googleAuthCallback } from '../controllers/user.controller';
+import {
+  googleAuthCallback,
+  forgotPassword,
+  resetPassword,
+} from '../controllers/user.controller';
 
 const router = express.Router();
 
@@ -22,5 +26,9 @@ router.get(
   }),
   googleAuthCallback
 );
+
+// Password reset routes
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 export default router;
