@@ -189,3 +189,38 @@ export const resetPassword = asyncWrapper(
     );
   },
 );
+
+export const logout = asyncWrapper(
+  async (req: CustomRequest, res: Response) => {
+    const { id } = req.user!;
+    
+    // Clear refresh token from database
+    const user = await User.findByPk(id);
+    if (user) {
+      user.refresh_token = null;
+      await user.save();
+    }
+
+    // Clear cookies
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    return ApiResponse.success(res, {}, 'Logged out successfully');
+  },
+);
+
+export const getMe = asyncWrapper(
+  async (req: CustomRequest, res: Response) => {
+    const { id } = req.user!;
+
+    const user = await User.findByPk(id, {
+      attributes: ['id', 'name', 'email', 'is_two_factor_enabled', 'auth_provider', 'createdAt'],
+    });
+
+    if (!user) {
+      return ApiResponse.error(res, 'User not found', HTTP_STATUS.NOT_FOUND);
+    }
+
+    return ApiResponse.success(res, { user }, 'User profile retrieved successfully');
+  },
+);

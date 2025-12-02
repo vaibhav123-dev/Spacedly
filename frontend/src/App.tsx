@@ -13,6 +13,7 @@ import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import CalendarPage from './pages/CalendarPage';
@@ -41,14 +42,15 @@ const App = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected Routes */}
             <Route
               path="/dashboard"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Dashboard />} />
@@ -57,9 +59,9 @@ const App = () => {
             <Route
               path="/tasks"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Tasks />} />
@@ -68,9 +70,9 @@ const App = () => {
             <Route
               path="/calendar"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<CalendarPage />} />
@@ -79,9 +81,9 @@ const App = () => {
             <Route
               path="/analytics"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Analytics />} />
@@ -90,9 +92,9 @@ const App = () => {
             <Route
               path="/notifications"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Notifications />} />
@@ -101,9 +103,9 @@ const App = () => {
             <Route
               path="/profile"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Profile />} />
@@ -112,9 +114,9 @@ const App = () => {
             <Route
               path="/settings"
               element={
-                // <ProtectedRoute>
+                <ProtectedRoute>
                   <AppLayout />
-                // </ProtectedRoute>
+                </ProtectedRoute>
               }
             >
               <Route index element={<Settings />} />

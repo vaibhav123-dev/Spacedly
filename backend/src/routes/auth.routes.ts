@@ -4,9 +4,22 @@ import {
   googleAuthCallback,
   forgotPassword,
   resetPassword,
+  loginUser,
+  registerUser,
+  logout,
 } from '../controllers/user.controller';
+import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = express.Router();
+
+// Auth routes
+router.post('/register', registerUser);
+router.post('/login', loginUser);
+router.post('/logout', authMiddleware, logout);
+
+// Password reset routes
+router.post('/forgot-password', forgotPassword);
+router.post('/reset-password', resetPassword);
 
 // Initiate Google OAuth flow
 router.get(
@@ -26,9 +39,5 @@ router.get(
   }),
   googleAuthCallback
 );
-
-// Password reset routes
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
 
 export default router;
