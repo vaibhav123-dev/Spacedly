@@ -30,6 +30,26 @@ interface EventDetails {
   status?: string;
 }
 
+
+const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'hsl(var(--success))';
+      case 'skipped': return 'hsl(var(--muted))';
+      case 'pending': return 'hsl(var(--warning))';
+      default: return 'hsl(var(--muted))';
+    }
+};
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'hsl(var(--destructive))';
+      case 'Medium': return 'hsl(var(--warning))';
+      case 'Low': return 'hsl(var(--success))';
+      default: return 'hsl(var(--muted))';
+    }
+  };
+
+
 const CalendarPage = () => {
   const { data: reminders, isLoading: remindersLoading } = useGetRemindersQuery();
   const { data: tasks, isLoading: tasksLoading } = useGetTasksQuery();
@@ -43,7 +63,7 @@ const CalendarPage = () => {
 
     // Add tasks as events (using createdAt date)
     if (tasks) {
-      tasks.forEach((task) => {
+      tasks?.tasks.forEach((task) => {
         events.push({
           id: `task-${task.id}`,
           title: task.title,
@@ -62,8 +82,8 @@ const CalendarPage = () => {
     }
 
     // Add reminders as events
-    if (reminders) {
-      reminders.forEach((reminder) => {
+    if (reminders?.reminders) {
+      reminders.reminders.forEach((reminder) => {
         events.push({
           id: `reminder-${reminder.id}`,
           title: `Reminder`,
@@ -83,30 +103,14 @@ const CalendarPage = () => {
     return events;
   }, [tasks, reminders]);
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'High': return 'hsl(var(--destructive))';
-      case 'Medium': return 'hsl(var(--warning))';
-      case 'Low': return 'hsl(var(--success))';
-      default: return 'hsl(var(--muted))';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'hsl(var(--success))';
-      case 'skipped': return 'hsl(var(--muted))';
-      case 'pending': return 'hsl(var(--warning))';
-      default: return 'hsl(var(--muted))';
-    }
-  };
+ 
 
   const handleEventClick = (clickInfo: EventClickArg) => {
     const { event } = clickInfo;
     const { extendedProps } = event;
     
     if (extendedProps.type === 'task') {
-      const task = tasks?.find(t => t.id === extendedProps.taskId);
+      const task = tasks?.tasks.find(t => t.id === extendedProps.taskId);
       if (task) {
         setSelectedEvent({
           type: 'task',
@@ -120,8 +124,8 @@ const CalendarPage = () => {
         setDialogOpen(true);
       }
     } else if (extendedProps.type === 'reminder') {
-      const reminder = reminders?.find(r => r.id === extendedProps.reminderId);
-      const task = tasks?.find(t => t.id === extendedProps.taskId);
+      const reminder = reminders?.reminders?.find(r => r.id === extendedProps.reminderId);
+      const task = tasks?.tasks.find(t => t.id === extendedProps.taskId);
       if (reminder) {
         setSelectedEvent({
           type: 'reminder',
@@ -256,7 +260,7 @@ const CalendarPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {tasks?.slice(0, 5).map((task) => (
+                {tasks?.tasks.slice(0, 5).map((task) => (
                   <div key={task.id} className="flex items-center justify-between rounded-lg border p-3">
                     <div className="flex-1">
                       <p className="font-medium">{task.title}</p>
@@ -267,7 +271,7 @@ const CalendarPage = () => {
                     </Badge>
                   </div>
                 ))}
-                {(!tasks || tasks.length === 0) && (
+                {(!tasks || tasks.tasks.length === 0) && (
                   <p className="text-center text-sm text-muted-foreground">No tasks yet</p>
                 )}
               </div>
@@ -289,8 +293,8 @@ const CalendarPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {reminders?.slice(0, 5).map((reminder) => {
-                  const task = tasks?.find(t => t.id === reminder.taskId);
+                {reminders?.reminders?.slice(0, 5).map((reminder) => {
+                  const task = tasks?.tasks.find(t => t.id === reminder.taskId);
                   return (
                     <div key={reminder.id} className="flex items-center justify-between rounded-lg border p-3">
                       <div className="flex-1">
@@ -310,7 +314,7 @@ const CalendarPage = () => {
                     </div>
                   );
                 })}
-                {(!reminders || reminders.length === 0) && (
+                {(!reminders?.reminders || reminders.reminders.length === 0) && (
                   <p className="text-center text-sm text-muted-foreground">No reminders scheduled</p>
                 )}
               </div>

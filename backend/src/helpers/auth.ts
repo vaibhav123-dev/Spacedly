@@ -19,7 +19,7 @@ export const comparePassword = async (
 
 // Function to generate JWT token
 
-export const generateAccessToken = (userId: number, email: string): string => {
+export const generateAccessToken = (userId: string, email: string): string => {
   const payload = { id: userId, email };
 
   return jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, {
@@ -27,7 +27,7 @@ export const generateAccessToken = (userId: number, email: string): string => {
   });
 };
 
-export const generateRefreshToken = (userId: number, email: string): string => {
+export const generateRefreshToken = (userId: string, email: string): string => {
   const payload = { id: userId, email };
 
   return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {

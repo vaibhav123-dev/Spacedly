@@ -21,13 +21,6 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  useEffect(() => {
-    if (!token) {
-      toast.error('Invalid reset link');
-      navigate('/forgot-password');
-    }
-  }, [token, navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -52,8 +45,22 @@ const ResetPassword = () => {
     }
   };
 
+  // If no token, show error message instead of redirecting
   if (!token) {
-    return null;
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <Card className="glass w-full max-w-md">
+          <CardContent className="pt-6 text-center space-y-4">
+            <p className="text-muted-foreground">Invalid or missing reset token.</p>
+            <Link to="/forgot-password">
+              <Button className="gradient-primary">
+                Request New Reset Link
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   return (

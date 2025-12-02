@@ -47,7 +47,10 @@ axiosInstance.interceptors.response.use(
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         // Refresh failed, redirect to login
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/signup' && window.location.pathname !== '/') {
+        const publicRoutes = ['/login', '/signup', '/', '/forgot-password', '/reset-password', '/verify-otp'];
+        const isPublicRoute = publicRoutes.some(route => window.location.pathname.startsWith(route));
+        
+        if (!isPublicRoute) {
           window.location.href = '/login';
         }
         return Promise.reject(refreshError);

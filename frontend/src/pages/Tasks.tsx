@@ -212,13 +212,13 @@ const Tasks = () => {
 
       // Handle reminders
       if (reminders.length > 0) {
-        const newReminders = reminders.filter(r => !r.id);
+        const newReminders = reminders?.filter(r => !r.id);
         
         for (const reminder of newReminders) {
           if (reminder.date && reminder.time) {
             const [hours, minutes] = reminder.time.split(':');
             const scheduledDate = new Date(reminder.date);
-            scheduledDate.setHours(parseInt(hours), parseInt(minutes));
+            scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
             await createReminder({
               taskId,
@@ -235,8 +235,8 @@ const Tasks = () => {
 
       // Delete removed reminders
       if (editingTask) {
-        const currentReminderIds = reminders.filter(r => r.id).map(r => r.id!);
-        const removedIds = existingReminderIds.filter(id => !currentReminderIds.includes(id));
+        const currentReminderIds = reminders?.filter(r => r.id).map(r => r.id!);
+        const removedIds = existingReminderIds?.filter(id => !currentReminderIds.includes(id));
         
         for (const id of removedIds) {
           await deleteReminder(id).unwrap();
@@ -338,12 +338,12 @@ const Tasks = () => {
   };
 
   const removeFile = (fileId: string) => {
-    setAttachedFiles(attachedFiles.filter(f => f.id !== fileId));
+    setAttachedFiles(attachedFiles?.filter(f => f.id !== fileId));
     toast.info('File removed');
   };
 
   const removeExistingAttachment = (attachmentId: string) => {
-    setExistingAttachments(existingAttachments.filter(a => a.id !== attachmentId));
+    setExistingAttachments(existingAttachments?.filter(a => a.id !== attachmentId));
     toast.info('Attachment will be removed when you save');
   };
 
@@ -366,7 +366,7 @@ const Tasks = () => {
   };
 
   const removeReminder = (index: number) => {
-    setReminders(reminders.filter((_, i) => i !== index));
+    setReminders(reminders?.filter((_, i) => i !== index));
   };
 
   const updateReminder = (index: number, field: 'date' | 'time', value: Date | string | undefined) => {
@@ -380,10 +380,11 @@ const Tasks = () => {
   };
 
   // Use dummy tasks for testing, fallback to API data
-  const allTasks = tasks || dummyTasks;
+  // API returns { tasks: [...] }, extract the array
+  const allTasks = tasks?.tasks || dummyTasks;
 
   // Apply filters
-  const filteredTasks = allTasks.filter((task) => {
+  const filteredTasks = allTasks?.filter((task) => {
     const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCategory = categoryFilter === 'all' || task.category === categoryFilter;

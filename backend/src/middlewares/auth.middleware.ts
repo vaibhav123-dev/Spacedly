@@ -4,7 +4,7 @@ import User from '../models/user.model';
 import { generateAccessToken } from '../helpers/auth';
 
 export interface CustomRequest extends Request {
-  user?: { id: number; email: string };
+  user?: { id: string; email: string };
   body: any;
   params: any;
   files?: any;

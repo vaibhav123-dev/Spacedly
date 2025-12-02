@@ -7,7 +7,7 @@ export const initializeAuth = async () => {
   store.dispatch(setLoading(true));
   
   // Check if API URL is configured
-  if (!API_BASE_URL || API_BASE_URL.includes('localhost')) {
+  if (!API_BASE_URL) {
     console.log('No backend API configured. Skipping auth initialization.');
     store.dispatch(setLoading(false));
     return;

@@ -7,6 +7,7 @@ export const authApi = createApi({
     baseUrl: API_BASE_URL,
     credentials: 'include',
   }),
+  tagTypes: ['User'],
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials: { email: string; password: string }) => ({
@@ -44,6 +45,15 @@ export const authApi = createApi({
     }),
     getMe: builder.query({
       query: () => '/user/me',
+      providesTags: ['User'],
+    }),
+    toggle2FA: builder.mutation({
+      query: (data: { is_Enabled: boolean }) => ({
+        url: '/user/enabled-2fa',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['User'],
     }),
   }),
 });
@@ -55,4 +65,5 @@ export const {
   useForgotPasswordMutation,
   useResetPasswordMutation,
   useGetMeQuery,
+  useToggle2FAMutation,
 } = authApi;

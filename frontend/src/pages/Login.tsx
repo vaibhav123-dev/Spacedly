@@ -26,6 +26,14 @@ const Login = () => {
     
     try {
       const result = await login(formData).unwrap();
+      
+      // Check if 2FA is required (OTP sent)
+      if (result?.message?.includes('Otp')) {
+        toast.info('Verification code sent to your email');
+        navigate('/verify-otp', { state: { email: formData.email } });
+        return;
+      }
+      
       dispatch(setCredentials(result));
       toast.success('Welcome back!');
       navigate('/dashboard');

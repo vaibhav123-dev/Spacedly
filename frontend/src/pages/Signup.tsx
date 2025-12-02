@@ -40,7 +40,7 @@ const Signup = () => {
       
       dispatch(setCredentials(result));
       toast.success('Account created successfully!');
-      navigate('/dashboard');
+      navigate('/login');
     } catch (error: any) {
       toast.error(error?.data?.message || 'Registration failed');
     }

@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import VerifyOTP from './pages/VerifyOTP';
 import Dashboard from './pages/Dashboard';
 import Tasks from './pages/Tasks';
 import CalendarPage from './pages/CalendarPage';
@@ -41,8 +42,9 @@ const App = () => {
             <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/verify-otp" element={<VerifyOTP />} />
 
             {/* Protected Routes */}
             <Route

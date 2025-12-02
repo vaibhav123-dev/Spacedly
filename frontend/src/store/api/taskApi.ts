@@ -10,9 +10,10 @@ export const taskApi = createApi({
   }),
   tagTypes: ['Task'],
   endpoints: (builder) => ({
-    getTasks: builder.query<Task[], void>({
+    getTasks: builder.query<{ tasks: Task[] }, void>({
       query: () => '/tasks',
       providesTags: ['Task'],
+      transformResponse: (response: any) => response.data || response,
     }),
     getTask: builder.query<Task, string>({
       query: (id) => `/tasks/${id}`,
@@ -24,6 +25,7 @@ export const taskApi = createApi({
         method: 'POST',
         body: task,
       }),
+      transformResponse: (response: any) => response.data?.task || response,
       invalidatesTags: ['Task'],
     }),
     updateTask: builder.mutation({

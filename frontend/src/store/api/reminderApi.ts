@@ -10,13 +10,15 @@ export const reminderApi = createApi({
   }),
   tagTypes: ['Reminder'],
   endpoints: (builder) => ({
-    getReminders: builder.query<Reminder[], void>({
+    getReminders: builder.query<{ reminders: Reminder[] }, void>({
       query: () => '/reminders',
       providesTags: ['Reminder'],
+      transformResponse: (response: any) => response.data || response,
     }),
     getTaskReminders: builder.query<Reminder[], string>({
       query: (taskId) => `/tasks/${taskId}/reminders`,
       providesTags: ['Reminder'],
+      transformResponse: (response: any) => response.data?.reminders || response,
     }),
     createReminder: builder.mutation({
       query: (reminder: Omit<Reminder, 'id' | 'createdAt'>) => ({
