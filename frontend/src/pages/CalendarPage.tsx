@@ -2,10 +2,11 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useGetRemindersQuery } from '@/store/api/reminderApi';
+import { useGetRemindersQuery, useUpdateReminderMutation } from '@/store/api/reminderApi';
 import { useGetTasksQuery } from '@/store/api/taskApi';
-import { Calendar, Clock, ListTodo } from 'lucide-react';
+import { Calendar, Clock, ListTodo, Check, X } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -53,40 +54,59 @@ const getStatusColor = (status: string) => {
 const CalendarPage = () => {
   const { data: reminders, isLoading: remindersLoading } = useGetRemindersQuery();
   const { data: tasks, isLoading: tasksLoading } = useGetTasksQuery();
+  const [updateReminder] = useUpdateReminderMutation();
   const [selectedEvent, setSelectedEvent] = useState<EventDetails | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   const isLoading = remindersLoading || tasksLoading;
 
+  const handleCompleteReminder = async () => {
+    if (selectedEvent?.type === 'reminder' && selectedEvent.id) {
+      try {
+        await updateReminder({
+          id: selectedEvent.id,
+          status: 'completed'
+        }).unwrap();
+        toast.success('Reminder marked as completed!');
+        setDialogOpen(false);
+      } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to update reminder');
+      }
+    }
+  };
+
+  const handleSkipReminder = async () => {
+    if (selectedEvent?.type === 'reminder' && selectedEvent.id) {
+      try {
+        await updateReminder({
+          id: selectedEvent.id,
+          status: 'skipped'
+        }).unwrap();
+        toast.info('Reminder skipped');
+        setDialogOpen(false);
+      } catch (error: any) {
+        toast.error(error?.data?.message || 'Failed to update reminder');
+      }
+    }
+  };
+
   const calendarEvents = useMemo(() => {
     const events = [];
 
-    // Add tasks as events (using createdAt date)
-    if (tasks) {
-      tasks?.tasks.forEach((task) => {
-        events.push({
-          id: `task-${task.id}`,
-          title: task.title,
-          start: task.createdAt,
-          backgroundColor: getPriorityColor(task.priority),
-          borderColor: getPriorityColor(task.priority),
-          extendedProps: {
-            type: 'task',
-            taskId: task.id,
-            description: task.description,
-            category: task.category,
-            priority: task.priority,
-          },
-        });
-      });
-    }
+    // Helper function to truncate title for display
+    const truncateTitle = (title: string, maxLength: number = 25) => {
+      if (title.length <= maxLength) return title;
+      return title.substring(0, maxLength) + '...';
+    };
 
-    // Add reminders as events
-    if (reminders?.reminders) {
+    // Only show reminders on calendar (not tasks by creation date)
+    if (reminders?.reminders && tasks?.tasks) {
       reminders.reminders.forEach((reminder) => {
+        const task = tasks.tasks.find(t => t.id === reminder.taskId);
+        const fullTitle = task ? task.title : 'Reminder';
         events.push({
           id: `reminder-${reminder.id}`,
-          title: `Reminder`,
+          title: truncateTitle(fullTitle),
           start: reminder.scheduledAt,
           backgroundColor: getStatusColor(reminder.status),
           borderColor: getStatusColor(reminder.status),
@@ -95,6 +115,10 @@ const CalendarPage = () => {
             reminderId: reminder.id,
             taskId: reminder.taskId,
             status: reminder.status,
+            taskTitle: task?.title,
+            taskDescription: task?.description,
+            taskCategory: task?.category,
+            taskPriority: task?.priority,
           },
         });
       });
@@ -370,6 +394,24 @@ const CalendarPage = () => {
               )}
             </div>
             <div className="flex justify-end gap-2">
+              {selectedEvent?.type === 'reminder' && selectedEvent?.status === 'pending' && (
+                <>
+                  <Button
+                    onClick={handleCompleteReminder}
+                    className="bg-success hover:bg-success/90"
+                  >
+                    <Check className="mr-2 h-4 w-4" />
+                    Complete
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleSkipReminder}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Skip
+                  </Button>
+                </>
+              )}
               <Button variant="outline" onClick={() => setDialogOpen(false)}>
                 Close
               </Button>

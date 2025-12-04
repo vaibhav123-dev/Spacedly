@@ -1,14 +1,15 @@
 import { StatCard } from '@/components/StatCard';
 import { CheckCircle, Clock, AlertCircle, Calendar, TrendingUp, Flame } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetAnalyticsQuery } from '@/store/api/analyticsApi';
+import { useGetAnalyticsQuery, useGetStreaksQuery } from '@/store/api/analyticsApi';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 
 const Dashboard = () => {
-  const { data: analytics, isLoading } = useGetAnalyticsQuery();
+  const { data: analytics, isLoading: analyticsLoading } = useGetAnalyticsQuery();
+  const { data: streaks, isLoading: streaksLoading } = useGetStreaksQuery();
 
-  if (isLoading) {
+  if (analyticsLoading || streaksLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -68,7 +69,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Active Streak</p>
-                  <p className="text-3xl font-bold">{analytics?.activeStreak || 0} days</p>
+                  <p className="text-3xl font-bold">{streaks?.active || 0} days</p>
                 </div>
               </div>
             </CardContent>
@@ -88,7 +89,7 @@ const Dashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Longest Streak</p>
-                  <p className="text-3xl font-bold">{analytics?.longestStreak || 0} days</p>
+                  <p className="text-3xl font-bold">{streaks?.longest || 0} days</p>
                 </div>
               </div>
             </CardContent>

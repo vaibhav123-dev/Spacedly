@@ -20,7 +20,9 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from '@/components/ui/sidebar';
+import { Badge } from '@/components/ui/badge';
 import { useLogoutMutation } from '@/store/api/authApi';
+import { useGetUnreadCountQuery } from '@/store/api/notificationApi';
 import { useAppDispatch } from '@/store/hooks';
 import { logout as logoutAction } from '@/store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
@@ -43,6 +45,7 @@ export function AppSidebar() {
   const [logout] = useLogoutMutation();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { data: unreadCount } = useGetUnreadCountQuery();
 
   const handleLogout = async () => {
     try {
@@ -73,11 +76,19 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      className="transition-smooth hover:bg-muted/50"
+                      className="transition-smooth hover:bg-muted/50 relative"
                       activeClassName="bg-primary/10 text-primary font-medium"
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
+                      {item.title === 'Notifications' && unreadCount && unreadCount > 0 && (
+                        <Badge 
+                          variant="destructive" 
+                          className="ml-auto h-5 w-5 flex items-center justify-center p-0 text-xs min-w-[1.25rem] rounded-full"
+                        >
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </Badge>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

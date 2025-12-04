@@ -5,6 +5,7 @@ import ApiError from '../utils/apiError';
 import HTTP_STATUS from '../constants';
 import fs from 'fs';
 import path from 'path';
+import { cacheService } from './cache.service';
 
 interface CreateTaskInput {
   userId: string;
@@ -25,6 +26,10 @@ interface UpdateTaskInput {
 
 export const createTask = async (taskData: CreateTaskInput) => {
   const task = await Task.create(taskData as any);
+  
+  // Clear analytics cache
+  await cacheService.del(`analytics:${taskData.userId}`);
+  
   return task;
 };
 
@@ -76,6 +81,9 @@ export const updateTask = async (
 
   await task.update(updateData);
   
+  // Clear analytics cache
+  await cacheService.del(`analytics:${userId}`);
+  
   // Fetch updated task with attachments
   const updatedTask = await getTaskById(taskId, userId);
   return updatedTask;
@@ -102,6 +110,9 @@ export const deleteTask = async (taskId: string, userId: string) => {
 
   // Delete task (cascade will delete attachments and reminders from DB)
   await task.destroy();
+  
+  // Clear analytics cache
+  await cacheService.del(`analytics:${userId}`);
 };
 
 export const addTaskAttachments = async (

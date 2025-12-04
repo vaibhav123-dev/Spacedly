@@ -8,12 +8,21 @@ export const analyticsApi = createApi({
     baseUrl: API_BASE_URL,
     credentials: 'include',
   }),
+  tagTypes: ['Analytics'],
   endpoints: (builder) => ({
     getAnalytics: builder.query<AnalyticsData, void>({
       query: () => '/analytics',
+      transformResponse: (response: any) => response.data || response,
+      providesTags: ['Analytics'],
+      // Refetch when navigating back to the page after 60 seconds
+      keepUnusedDataFor: 60,
     }),
     getStreaks: builder.query<{ active: number; longest: number }, void>({
       query: () => '/analytics/streaks',
+      transformResponse: (response: any) => response.data || response,
+      providesTags: ['Analytics'],
+      // Refetch when navigating back to the page after 60 seconds
+      keepUnusedDataFor: 60,
     }),
   }),
 });

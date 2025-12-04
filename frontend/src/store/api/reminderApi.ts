@@ -8,7 +8,7 @@ export const reminderApi = createApi({
     baseUrl: API_BASE_URL,
     credentials: 'include',
   }),
-  tagTypes: ['Reminder'],
+  tagTypes: ['Reminder', 'Analytics'],
   endpoints: (builder) => ({
     getReminders: builder.query<{ reminders: Reminder[] }, void>({
       query: () => '/reminders',
@@ -34,14 +34,14 @@ export const reminderApi = createApi({
         method: 'PUT',
         body: reminder,
       }),
-      invalidatesTags: ['Reminder'],
+      invalidatesTags: ['Reminder', 'Analytics'],
     }),
     deleteReminder: builder.mutation({
       query: (id: string) => ({
         url: `/reminders/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Reminder'],
+      invalidatesTags: ['Reminder', 'Analytics'],
     }),
   }),
 });

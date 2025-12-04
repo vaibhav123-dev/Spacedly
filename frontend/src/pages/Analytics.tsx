@@ -1,13 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useGetAnalyticsQuery } from '@/store/api/analyticsApi';
+import { useGetAnalyticsQuery, useGetStreaksQuery } from '@/store/api/analyticsApi';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { TrendingUp, BarChart3 } from 'lucide-react';
+import { TrendingUp, BarChart3, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Analytics = () => {
-  const { data: analytics, isLoading } = useGetAnalyticsQuery();
+  const { data: analytics, isLoading: analyticsLoading } = useGetAnalyticsQuery();
+  const { data: streaks, isLoading: streaksLoading } = useGetStreaksQuery();
 
-  if (isLoading) {
+  if (analyticsLoading || streaksLoading) {
     return (
       <div className="flex h-full items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -27,11 +28,56 @@ const Analytics = () => {
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Streaks Section */}
+      <div className="grid gap-6 md:grid-cols-2">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+        >
+          <Card className="glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-full bg-warning/10 p-4">
+                  <Flame className="h-8 w-8 text-warning" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Streak</p>
+                  <p className="text-3xl font-bold">{streaks?.active || 0} days</p>
+                  <p className="text-xs text-muted-foreground mt-1">Keep it going!</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.1 }}
+        >
+          <Card className="glass">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <div className="rounded-full bg-success/10 p-4">
+                  <TrendingUp className="h-8 w-8 text-success" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Longest Streak</p>
+                  <p className="text-3xl font-bold">{streaks?.longest || 0} days</p>
+                  <p className="text-xs text-muted-foreground mt-1">Personal best!</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
         >
           <Card className="glass">
             <CardHeader>
@@ -69,7 +115,7 @@ const Analytics = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.1 }}
+          transition={{ duration: 0.3, delay: 0.3 }}
         >
           <Card className="glass">
             <CardHeader>
@@ -98,7 +144,7 @@ const Analytics = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: 0.2 }}
+          transition={{ duration: 0.3, delay: 0.4 }}
           className="lg:col-span-2"
         >
           <Card className="glass">
@@ -139,7 +185,7 @@ const Analytics = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.3 }}
+        transition={{ duration: 0.3, delay: 0.5 }}
       >
         <Card className="glass">
           <CardContent className="p-6">

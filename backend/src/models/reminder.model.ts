@@ -7,6 +7,12 @@ class Reminder extends Model {
   public userId!: string;
   public scheduledAt!: Date;
   public status!: 'pending' | 'completed' | 'skipped';
+  public morningEmailSent!: boolean;
+  public hourBeforeEmailSent!: boolean;
+
+  // associations
+  public task?: any;
+  public user?: any;
 
   // timestamp
   public readonly createdAt!: Date;
@@ -38,6 +44,18 @@ Reminder.init(
       type: DataTypes.ENUM('pending', 'completed', 'skipped'),
       allowNull: false,
       defaultValue: 'pending',
+    },
+    morningEmailSent: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'morning_email_sent',
+    },
+    hourBeforeEmailSent: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      field: 'hour_before_email_sent',
     },
   },
   {

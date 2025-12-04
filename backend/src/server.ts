@@ -1,18 +1,23 @@
 import app from './app';
 import sequelize from './config/database';
+import { startReminderCron } from './services/reminderCron.service';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 sequelize
-  .sync({ alter: true })
+  .authenticate()
   .then(() => {
-    console.log('Database connneted and models synchronized');
+    console.log('Database connected successfully');
+    
+    // Start reminder cron job
+    startReminderCron();
+    
     app.listen(process.env.PORT, () => {
-      console.log(`Server is running at port  ${process.env.PORT}`);
+      console.log(`Server is running at port ${process.env.PORT}`);
     });
   })
   .catch((error) => {
-    console.log('unable to connect to database', error);
+    console.log('Unable to connect to database', error);
   });
 export default app;

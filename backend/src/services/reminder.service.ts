@@ -2,6 +2,7 @@ import Reminder from '../models/reminder.model';
 import Task from '../models/task.model';
 import ApiError from '../utils/apiError';
 import HTTP_STATUS from '../constants';
+import { cacheService } from './cache.service';
 
 interface CreateReminderInput {
   taskId: string;
@@ -26,6 +27,10 @@ export const createReminder = async (reminderData: CreateReminderInput) => {
   }
 
   const reminder = await Reminder.create(reminderData as any);
+  
+  // Clear analytics cache
+  await cacheService.del(`analytics:${reminderData.userId}`);
+  
   return reminder;
 };
 
@@ -68,6 +73,10 @@ export const updateReminder = async (
   }
 
   await reminder.update(updateData);
+  
+  // Clear analytics cache
+  await cacheService.del(`analytics:${userId}`);
+  
   return reminder;
 };
 
@@ -81,4 +90,7 @@ export const deleteReminder = async (reminderId: string, userId: string) => {
   }
 
   await reminder.destroy();
+  
+  // Clear analytics cache
+  await cacheService.del(`analytics:${userId}`);
 };

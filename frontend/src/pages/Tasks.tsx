@@ -9,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Plus, Edit, Trash2, Search, Calendar as CalendarIcon, X, Clock, Upload, File, FileText, Image as ImageIcon, Paperclip, Download } from 'lucide-react';
-import { useGetTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation } from '@/store/api/taskApi';
-import { useCreateReminderMutation, useGetTaskRemindersQuery, useDeleteReminderMutation } from '@/store/api/reminderApi';
+import { useGetTasksQuery, useCreateTaskMutation, useUpdateTaskMutation, useDeleteTaskMutation, useUploadAttachmentsMutation } from '@/store/api/taskApi';
+import { useCreateReminderMutation, useGetTaskRemindersQuery, useUpdateReminderMutation, useDeleteReminderMutation } from '@/store/api/reminderApi';
 import { Task, TaskAttachment } from '@/store/slices/taskSlice';
+import { API_BASE_URL } from '@/config/app';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -149,7 +150,9 @@ const Tasks = () => {
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
+  const [uploadAttachments] = useUploadAttachmentsMutation();
   const [createReminder] = useCreateReminderMutation();
+  const [updateReminder] = useUpdateReminderMutation();
   const [deleteReminder] = useDeleteReminderMutation();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -210,15 +213,23 @@ const Tasks = () => {
         toast.success('Task created successfully');
       }
 
+      // Upload attachments if any
+      if (attachedFiles.length > 0) {
+        const filesToUpload = attachedFiles.map(f => f.file);
+        await uploadAttachments({ taskId, files: filesToUpload }).unwrap();
+        toast.success(`${attachedFiles.length} file(s) uploaded successfully`);
+      }
+
       // Handle reminders
       if (reminders.length > 0) {
+        // Create new reminders (those without ID)
         const newReminders = reminders?.filter(r => !r.id);
         
         for (const reminder of newReminders) {
           if (reminder.date && reminder.time) {
-            const [hours, minutes] = reminder.time.split(':');
+            const [hours, minutes] = reminder.time.split(':').map(Number);
             const scheduledDate = new Date(reminder.date);
-            scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+            scheduledDate.setHours(hours, minutes, 0, 0);
 
             await createReminder({
               taskId,
@@ -228,8 +239,26 @@ const Tasks = () => {
           }
         }
         
-        if (newReminders.length > 0) {
-          toast.success(`${newReminders.length} reminder(s) scheduled`);
+        // Update existing reminders (those with ID)
+        const existingReminders = reminders?.filter(r => r.id);
+        
+        for (const reminder of existingReminders) {
+          if (reminder.date && reminder.time && reminder.id) {
+            const [hours, minutes] = reminder.time.split(':').map(Number);
+            const scheduledDate = new Date(reminder.date);
+            scheduledDate.setHours(hours, minutes, 0, 0);
+
+            await updateReminder({
+              id: reminder.id,
+              scheduledAt: scheduledDate.toISOString(),
+              status: 'pending',
+            }).unwrap();
+          }
+        }
+        
+        const totalUpdated = newReminders.length + existingReminders.length;
+        if (totalUpdated > 0) {
+          toast.success(`${totalUpdated} reminder(s) updated`);
         }
       }
 
@@ -296,44 +325,44 @@ const Tasks = () => {
     if (!files) return;
 
     const newFiles: FileWithPreview[] = [];
+    let filesProcessed = 0;
+    
+    const addFile = (fileData: FileWithPreview) => {
+      newFiles.push(fileData);
+      filesProcessed++;
+      
+      if (filesProcessed === files.length) {
+        setAttachedFiles([...attachedFiles, ...newFiles]);
+        toast.success(`${files.length} file(s) attached`);
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+      }
+    };
     
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      const reader = new FileReader();
       
-      reader.onload = (e) => {
-        const preview = e.target?.result as string;
-        newFiles.push({
-          file,
-          preview: file.type.startsWith('image/') ? preview : '',
-          id: Math.random().toString(36).substr(2, 9),
-        });
-
-        if (newFiles.length === files.length) {
-          setAttachedFiles([...attachedFiles, ...newFiles]);
-          toast.success(`${files.length} file(s) attached`);
-        }
-      };
-
       if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = e.target?.result as string;
+          addFile({
+            file,
+            preview,
+            id: Math.random().toString(36).substr(2, 9),
+          });
+        };
         reader.readAsDataURL(file);
       } else {
-        newFiles.push({
+        addFile({
           file,
           preview: '',
           id: Math.random().toString(36).substr(2, 9),
         });
-
-        if (newFiles.length === files.length) {
-          setAttachedFiles([...attachedFiles, ...newFiles]);
-          toast.success(`${files.length} file(s) attached`);
-        }
       }
-    }
-
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
     }
   };
 
@@ -356,20 +385,20 @@ const Tasks = () => {
   };
 
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
-    if (fileType.includes('pdf')) return <FileText className="h-4 w-4" />;
+    if (fileType?.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    if (fileType?.includes('pdf')) return <FileText className="h-4 w-4" />;
     return <File className="h-4 w-4" />;
   };
 
   const addReminder = () => {
-    setReminders([...reminders, { date: undefined, time: '09:00' }]);
+    setReminders([...reminders, { date: undefined, time: '12:00' }]);
   };
 
   const removeReminder = (index: number) => {
     setReminders(reminders?.filter((_, i) => i !== index));
   };
 
-  const updateReminder = (index: number, field: 'date' | 'time', value: Date | string | undefined) => {
+  const updateReminderField = (index: number, field: 'date' | 'time', value: Date | string | undefined) => {
     const newReminders = [...reminders];
     if (field === 'date') {
       newReminders[index].date = value as Date | undefined;
@@ -541,11 +570,11 @@ const Tasks = () => {
 
                 <div className="space-y-3">
                   {reminders.map((reminder, index) => (
-                    <div key={index} className="flex gap-2 items-start rounded-md border p-3">
-                      <div className="flex-1 space-y-2">
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-xs">Date</Label>
+                    <div key={index} className="space-y-3 rounded-md border p-3">
+                      <div className="flex gap-2 items-start">
+                        <div className="flex-1 space-y-3">
+                          <div>
+                            <Label className="text-xs mb-2 block">Date</Label>
                             <Popover>
                               <PopoverTrigger asChild>
                                 <Button
@@ -557,47 +586,47 @@ const Tasks = () => {
                                   )}
                                 >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {reminder.date ? format(reminder.date, 'PP') : <span>Pick date</span>}
+                                  {reminder.date ? format(reminder.date, 'PPP') : <span>Pick a date</span>}
                                 </Button>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0" align="start">
                                 <Calendar
                                   mode="single"
                                   selected={reminder.date}
-                                  onSelect={(date) => updateReminder(index, 'date', date)}
+                                  onSelect={(date) => updateReminderField(index, 'date', date)}
                                   initialFocus
                                 />
                               </PopoverContent>
                             </Popover>
                           </div>
 
-                          <div className="space-y-1">
-                            <Label className="text-xs">Time</Label>
+                          <div>
+                            <Label className="text-xs mb-2 block">Time</Label>
                             <Input
                               type="time"
                               value={reminder.time}
-                              onChange={(e) => updateReminder(index, 'time', e.target.value)}
+                              onChange={(e) => updateReminderField(index, 'time', e.target.value)}
                               className="w-full"
                             />
                           </div>
+
+                          {reminder.date && reminder.time && (
+                            <p className="text-xs text-muted-foreground">
+                              Reminder: {format(reminder.date, 'MMM d, yyyy')} at {reminder.time}
+                            </p>
+                          )}
                         </div>
 
-                        {reminder.date && reminder.time && (
-                          <p className="text-xs text-muted-foreground">
-                            Reminder scheduled for: {format(reminder.date, 'PPPP')} at {reminder.time}
-                          </p>
-                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => removeReminder(index)}
+                          className="h-8 w-8 text-destructive flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => removeReminder(index)}
-                        className="h-8 w-8 text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
                     </div>
                   ))}
                 </div>
@@ -886,12 +915,13 @@ const Tasks = () => {
                                 size="icon"
                                 className="h-8 w-8 flex-shrink-0"
                                 onClick={() => {
-                                  // For demo: In real app, this would download from attachment.url
-                                  if (attachment.url) {
-                                    window.open(attachment.url, '_blank');
-                                  } else {
-                                    toast.info(`Download: ${attachment.name}`);
-                                  }
+                                  // Remove /api from API_BASE_URL and construct file URL
+                                  const baseUrl = API_BASE_URL.replace('/api', '');
+                                  const fileUrl = `${baseUrl}${attachment.url}`;
+                                  
+                                  // Open file in new tab for preview or download
+                                  window.open(fileUrl, '_blank');
+                                  toast.success(`Opening ${attachment.name}`);
                                 }}
                               >
                                 <Download className="h-4 w-4" />

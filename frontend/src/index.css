@@ -250,6 +250,10 @@ All colors MUST be HSL.
   transition: var(--transition-smooth);
   border: none;
   margin-bottom: 2px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .calendar-wrapper .fc-event:hover {
@@ -260,6 +264,49 @@ All colors MUST be HSL.
 
 .calendar-wrapper .fc-event-title {
   font-weight: 500;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+.calendar-wrapper .fc-daygrid-event {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+  position: relative !important;
+}
+
+.calendar-wrapper .fc-daygrid-event-harness {
+  overflow: hidden !important;
+  position: relative !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+.calendar-wrapper .fc-daygrid-event-harness-abs {
+  position: absolute !important;
+  max-width: calc(100% - 4px) !important;
+  left: 2px !important;
+  right: 2px !important;
+}
+
+.calendar-wrapper .fc-daygrid-block-event {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.calendar-wrapper .fc-event-main {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
+}
+
+.calendar-wrapper .fc-event-main-frame {
+  overflow: hidden !important;
+  white-space: nowrap !important;
+  text-overflow: ellipsis !important;
 }
 
 .calendar-wrapper .fc-daygrid-event-dot {

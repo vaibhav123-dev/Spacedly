@@ -13,6 +13,12 @@ export const notificationApi = createApi({
     getNotifications: builder.query<Notification[], void>({
       query: () => '/notifications',
       providesTags: ['Notification'],
+      transformResponse: (response: any) => response.data?.notifications || response,
+    }),
+    getUnreadCount: builder.query<number, void>({
+      query: () => '/notifications/count',
+      providesTags: ['Notification'],
+      transformResponse: (response: any) => response.data?.count || 0,
     }),
     markAsRead: builder.mutation({
       query: (id: string) => ({
@@ -24,4 +30,4 @@ export const notificationApi = createApi({
   }),
 });
 
-export const { useGetNotificationsQuery, useMarkAsReadMutation } = notificationApi;
+export const { useGetNotificationsQuery, useGetUnreadCountQuery, useMarkAsReadMutation } = notificationApi;
