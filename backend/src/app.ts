@@ -72,6 +72,15 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Initialize Passport
 app.use(passport.initialize());
 
+// Health check endpoint
+app.get('/', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    message: 'Spacedly API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // routes
 app.use('/api', baseRoutes);
 
