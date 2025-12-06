@@ -22,8 +22,8 @@ app.set('trust proxy', 1);
 // Security headers with Helmet
 app.use(helmetConfig);
 
-// Request timeout (30 seconds)
-app.use(requestTimeout(30000));
+// Request timeout (60 seconds) - matches database timeout settings
+app.use(requestTimeout(60000));
 
 // Enhanced CORS configuration
 const allowedOrigins = process.env.ALLOWED_ORIGINS
