@@ -53,6 +53,35 @@ export const userLogin = async ({ email, password }) => {
     throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid credentials');
   }
 
+  // Check if 2FA is enabled
+  if (user.is_two_factor_enabled) {
+    // Generate and send OTP
+    const crypto = require('crypto');
+    const otp = crypto.randomInt(100000, 999999).toString();
+    
+    user.two_factor_otp = otp;
+    user.two_factor_otp_expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+    await user.save();
+
+    // Import sendEmail and otpTemplate
+    const { sendEmail } = require('../utils/emailUtil');
+    const { otpTemplate } = require('../helpers/otp');
+    
+    // Send OTP email
+    await sendEmail(email, 'Your Login OTP', otpTemplate(otp));
+
+    return {
+      requires2FA: true,
+      user_data: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        is_two_factor_enabled: user.is_two_factor_enabled,
+      },
+    };
+  }
+
+  // Regular login without 2FA
   const accessToken = generateAccessToken(user.id, user.email);
   const refreshToken = generateRefreshToken(user.id, user.email);
 
@@ -60,6 +89,7 @@ export const userLogin = async ({ email, password }) => {
   await user.save();
 
   return {
+    requires2FA: false,
     refreshToken,
     accessToken,
     user_data: {

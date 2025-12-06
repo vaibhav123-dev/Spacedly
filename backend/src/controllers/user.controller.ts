@@ -45,35 +45,24 @@ export const loginUser = asyncWrapper(async (req: Request, res: Response) => {
 
   await loginUserSchema.validateAsync({ email, password });
 
-  // Check if user has 2FA enabled
-  const user = await initiateTwoFactorAuth(email);
-
-  if (user.is_two_factor_enabled) {
-    // Generate and send OTP
-    const otp = generateOTP();
-    user.two_factor_otp = otp;
-    user.two_factor_otp_expiry = new Date(Date.now() + 5 * 60 * 1000);
-    await user.save();
-
-    // Send OTP email
-    await sendEmail(email, 'Your Login OTP', otpTemplate(otp));
-    
-    return ApiResponse.success(res, {}, 'Otp send to your registered Email ');
-  }
-
-  // Regular login without 2FA
-  const { accessToken, refreshToken, user_data } = await userLogin({
+  // Single optimized login call that handles both 2FA and regular login
+  const result = await userLogin({
     email,
     password,
   });
 
-  // Set cookies
-  setAuthCookies(res, accessToken, refreshToken);
+  // If 2FA is enabled, OTP has been sent
+  if (result.requires2FA) {
+    return ApiResponse.success(res, {}, 'OTP sent to your registered email');
+  }
+
+  // Regular login without 2FA - set cookies
+  setAuthCookies(res, result.accessToken!, result.refreshToken!);
 
   return ApiResponse.success(
     res,
-    { user: user_data },
-    'User logged in Successfully',
+    { user: result.user_data },
+    'User logged in successfully',
   );
 });
 
