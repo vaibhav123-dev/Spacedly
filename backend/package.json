@@ -4,7 +4,11 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon",
+    "start:prod": "node dist/server.js",
     "build": "tsc",
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "postbuild": "npm run migrate",
     "format": "prettier --write src/**/*.{js,ts,json,md}",
     "lint": "eslint src/**/*.{js,ts,json}",
     "lint-fix": "eslint src/**/*.{js,ts,json} --fix"
