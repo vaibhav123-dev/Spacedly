@@ -8,7 +8,6 @@
     "build": "tsc",
     "migrate": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
-    "postbuild": "npm run migrate",
     "format": "prettier --write src/**/*.{js,ts,json,md}",
     "lint": "eslint src/**/*.{js,ts,json}",
     "lint-fix": "eslint src/**/*.{js,ts,json} --fix"
@@ -38,7 +37,10 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "sequelize": "^6.37.7",
-    "sharp": "^0.34.5"
+    "sequelize-cli": "^6.6.3",
+    "sharp": "^0.34.5",
+    "typescript": "^5.9.3",
+    "@types/node": "^24.10.1"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.28.5",
@@ -47,7 +49,6 @@
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.0.0",
-    "@types/node": "^24.10.1",
     "@types/node-cron": "^3.0.11",
     "@types/passport": "^1.0.17",
     "@types/passport-google-oauth20": "^2.0.17",
@@ -55,9 +56,7 @@
     "eslint-plugin-react": "^7.37.5",
     "nodemon": "^3.1.11",
     "prettier": "^3.6.2",
-    "sequelize-cli": "^6.6.3",
     "ts-node": "^10.9.2",
-    "tsc-watch": "^7.2.0",
-    "typescript": "^5.9.3"
+    "tsc-watch": "^7.2.0"
   }
 }
