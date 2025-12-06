@@ -118,10 +118,13 @@ export const otpLimiter = rateLimit({
 export const requestTimeout = (timeout: number = 30000) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const timer = setTimeout(() => {
-      res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
-        success: false,
-        message: 'Request timeout',
-      });
+      // Only send timeout if response hasn't been sent yet
+      if (!res.headersSent) {
+        res.status(HTTP_STATUS.REQUEST_TIMEOUT).json({
+          success: false,
+          message: 'Request timeout',
+        });
+      }
     }, timeout);
 
     res.on('finish', () => clearTimeout(timer));
