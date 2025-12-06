@@ -14,7 +14,7 @@ export const setAuthCookies = (
   const cookieOptions = {
     httpOnly: true, // Prevents JavaScript access
     secure: isProduction, // HTTPS only in production
-    sameSite: (isProduction ? 'strict' : 'lax') as 'strict' | 'lax', // CSRF protection
+    sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax', // CSRF protection - 'none' required for cross-origin
     path: '/', // Available across entire domain
     domain: isProduction ? process.env.COOKIE_DOMAIN : undefined, // Specify domain in production
   };
@@ -39,7 +39,7 @@ export const clearAuthCookies = (res: Response): void => {
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
-    sameSite: (isProduction ? 'strict' : 'lax') as 'strict' | 'lax',
+    sameSite: (isProduction ? 'none' : 'lax') as 'none' | 'lax',
     path: '/',
     domain: isProduction ? process.env.COOKIE_DOMAIN : undefined,
   };
