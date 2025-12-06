@@ -13,8 +13,11 @@ sequelize
     // Start reminder cron job
     startReminderCron();
     
-    app.listen(process.env.PORT, () => {
-      console.log(`Server is running at port ${process.env.PORT}`);
+    const PORT = Number(process.env.PORT) || 3000;
+    const HOST = '0.0.0.0'; // Listen on all network interfaces for Railway
+    
+    app.listen(PORT, HOST, () => {
+      console.log(`Server is running on ${HOST}:${PORT}`);
     });
   })
   .catch((error) => {
