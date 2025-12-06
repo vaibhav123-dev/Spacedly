@@ -75,3 +75,40 @@ export const resetPasswordSchema = Joi.object({
     'any.required': 'Password field is required.',
   }),
 });
+
+export const toggle2FASchema = Joi.object({
+  is_Enabled: Joi.boolean().required().messages({
+    'boolean.base': 'is_Enabled must be a boolean value.',
+    'any.required': 'is_Enabled field is required.',
+  }),
+});
+
+export const verifyOtpSchema = Joi.object({
+  email: Joi.string()
+    .email({ tlds: { allow: false } })
+    .required()
+    .messages({
+      'string.base': 'Email must be a valid text.',
+      'string.empty': 'Email is required.',
+      'string.email': 'Please provide a valid email address.',
+      'any.required': 'Email field is required.',
+    }),
+
+  otp: Joi.string().length(6).pattern(/^[0-9]+$/).required().messages({
+    'string.base': 'OTP must be a valid text.',
+    'string.empty': 'OTP is required.',
+    'string.length': 'OTP must be exactly 6 digits.',
+    'string.pattern.base': 'OTP must contain only numbers.',
+    'any.required': 'OTP field is required.',
+  }),
+});
+
+export const setPasswordSchema = Joi.object({
+  password: Joi.string().min(6).max(30).required().messages({
+    'string.base': 'Password must be text.',
+    'string.empty': 'Password is required.',
+    'string.min': 'Password must be at least 6 characters long.',
+    'string.max': 'Password cannot exceed 30 characters.',
+    'any.required': 'Password field is required.',
+  }),
+});

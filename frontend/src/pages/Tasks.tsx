@@ -915,9 +915,10 @@ const Tasks = () => {
                                 size="icon"
                                 className="h-8 w-8 flex-shrink-0"
                                 onClick={() => {
-                                  // Remove /api from API_BASE_URL and construct file URL
-                                  const baseUrl = API_BASE_URL.replace('/api', '');
-                                  const fileUrl = `${baseUrl}${attachment.url}`;
+                                  // Check if URL is already a full URL (Cloudinary)
+                                  const fileUrl = attachment.url.startsWith('http') 
+                                    ? attachment.url 
+                                    : `${API_BASE_URL.replace('/api', '')}${attachment.url}`;
                                   
                                   // Open file in new tab for preview or download
                                   window.open(fileUrl, '_blank');

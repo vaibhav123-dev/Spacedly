@@ -33,7 +33,7 @@ const VerifyOTP = () => {
     setIsLoading(true);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/user/verify-otp`, {
+      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

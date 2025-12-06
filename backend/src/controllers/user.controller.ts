@@ -3,6 +3,9 @@ import {
   loginUserSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  toggle2FASchema,
+  verifyOtpSchema,
+  setPasswordSchema,
 } from '../validations/user.validation';
 import { Request, Response } from 'express';
 import {
@@ -12,6 +15,7 @@ import {
   verifyTwoFactorOtp,
   forgotPasswordService,
   resetPasswordService,
+  setPasswordForOAuthUser,
 } from '../services/user.service';
 import ApiResponse from '../utils/apiResponse';
 import asyncWrapper from '../utils/asyncWrapper';
@@ -21,7 +25,7 @@ import { generateOTP, otpTemplate } from '../helpers/otp';
 import HTTP_STATUS from '../constants';
 import { sendEmail } from '../utils/emailUtil';
 import { generateAccessToken, generateRefreshToken } from '../helpers/auth';
-import { setAuthCookies } from '../utils/cookieUtil';
+import { setAuthCookies, clearAuthCookies } from '../utils/cookieUtil';
 import { passwordResetTemplate } from '../helpers/emailTemplates';
 
 export const registerUser = asyncWrapper(
@@ -76,13 +80,8 @@ export const loginUser = asyncWrapper(async (req: Request, res: Response) => {
 export const verifyOtp = asyncWrapper(async (req: Request, res: Response) => {
   const { email, otp } = req.body;
 
-  if (!email || !otp) {
-    return ApiResponse.error(
-      res,
-      'Email and OTP are required',
-      HTTP_STATUS.BAD_REQUEST,
-    );
-  }
+  // Validate input
+  await verifyOtpSchema.validateAsync({ email, otp });
 
   // Verify OTP and generate tokens
   const { accessToken, refreshToken, user_data } = await verifyTwoFactorOtp(
@@ -103,6 +102,10 @@ export const verifyOtp = asyncWrapper(async (req: Request, res: Response) => {
 export const enable2FAauth = asyncWrapper(
   async (req: CustomRequest, res: Response) => {
     const { is_Enabled } = req.body;
+
+    // Validate input
+    await toggle2FASchema.validateAsync({ is_Enabled });
+
     const { id } = req.user;
     const user = await User.findByPk(id);
     
@@ -201,9 +204,8 @@ export const logout = asyncWrapper(
       await user.save();
     }
 
-    // Clear cookies
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    // Clear cookies with secure options
+    clearAuthCookies(res);
 
     return ApiResponse.success(res, {}, 'Logged out successfully');
   },
@@ -214,13 +216,42 @@ export const getMe = asyncWrapper(
     const { id } = req.user!;
 
     const user = await User.findByPk(id, {
-      attributes: ['id', 'name', 'email', 'is_two_factor_enabled', 'auth_provider', 'createdAt'],
+      attributes: ['id', 'name', 'email', 'is_two_factor_enabled', 'auth_provider', 'password', 'createdAt'],
     });
 
     if (!user) {
       return ApiResponse.error(res, 'User not found', HTTP_STATUS.NOT_FOUND);
     }
 
-    return ApiResponse.success(res, { user }, 'User profile retrieved successfully');
+    // Prepare user data without exposing password hash
+    const userData = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      is_two_factor_enabled: user.is_two_factor_enabled,
+      auth_provider: user.auth_provider,
+      has_password: !!user.password, // Boolean flag indicating if password is set
+      createdAt: user.createdAt,
+    };
+
+    return ApiResponse.success(res, { user: userData }, 'User profile retrieved successfully');
+  },
+);
+
+export const setPassword = asyncWrapper(
+  async (req: CustomRequest, res: Response) => {
+    const { password } = req.body;
+    const { id } = req.user!;
+
+    // Validate input
+    await setPasswordSchema.validateAsync({ password });
+
+    await setPasswordForOAuthUser(id, password);
+
+    return ApiResponse.success(
+      res,
+      {},
+      'Password set successfully. You can now login with email and password.',
+    );
   },
 );

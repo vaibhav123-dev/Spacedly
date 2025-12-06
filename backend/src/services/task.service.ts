@@ -99,12 +99,17 @@ export const deleteTask = async (taskId: string, userId: string) => {
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Task not found');
   }
 
-  // Delete all attachment files from disk
+  // Delete all attachment files from Cloudinary
   const attachments = await TaskAttachment.findAll({ where: { taskId } });
+  const cloudinary = require('../config/cloudinary').default;
+  
   for (const attachment of attachments) {
-    const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+    try {
+      await cloudinary.uploader.destroy(attachment.fileName);
+      console.log(`Deleted from Cloudinary: ${attachment.fileName}`);
+    } catch (error) {
+      console.error(`Error deleting ${attachment.fileName} from Cloudinary:`, error);
+      // Continue with other deletions
     }
   }
 
@@ -130,11 +135,11 @@ export const addTaskAttachments = async (
   for (const file of files) {
     const attachment = await TaskAttachment.create({
       taskId,
-      fileName: file.filename,
+      fileName: file.filename, // Cloudinary public_id
       originalName: file.originalname,
       fileSize: file.size,
       fileType: file.mimetype,
-      fileUrl: `/uploads/${file.filename}`,
+      fileUrl: file.path, // Cloudinary secure_url
     });
     attachments.push(attachment);
   }
@@ -155,10 +160,15 @@ export const deleteAttachment = async (
     throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Attachment not found');
   }
 
-  // Delete file from disk
-  const filePath = path.join(__dirname, '../../uploads', attachment.fileName);
-  if (fs.existsSync(filePath)) {
-    fs.unlinkSync(filePath);
+  // Delete file from Cloudinary
+  // fileName contains the Cloudinary public_id
+  try {
+    const cloudinary = require('../config/cloudinary').default;
+    await cloudinary.uploader.destroy(attachment.fileName);
+    console.log(`Deleted from Cloudinary: ${attachment.fileName}`);
+  } catch (error) {
+    console.error('Error deleting from Cloudinary:', error);
+    // Continue with deletion even if Cloudinary delete fails
   }
 
   await attachment.destroy();

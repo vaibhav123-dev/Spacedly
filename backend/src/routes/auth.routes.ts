@@ -7,19 +7,26 @@ import {
   loginUser,
   registerUser,
   logout,
+  verifyOtp,
 } from '../controllers/user.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
+import {
+  authLimiter,
+  passwordResetLimiter,
+  otpLimiter,
+} from '../middlewares/security.middleware';
 
 const router = express.Router();
 
-// Auth routes
-router.post('/register', registerUser);
-router.post('/login', loginUser);
+// Auth routes with rate limiting
+router.post('/register', authLimiter, registerUser);
+router.post('/login', authLimiter, loginUser);
+router.post('/verify-otp', otpLimiter, verifyOtp);
 router.post('/logout', authMiddleware, logout);
 
-// Password reset routes
-router.post('/forgot-password', forgotPassword);
-router.post('/reset-password', resetPassword);
+// Password reset routes with rate limiting
+router.post('/forgot-password', passwordResetLimiter, forgotPassword);
+router.post('/reset-password', passwordResetLimiter, resetPassword);
 
 // Initiate Google OAuth flow
 router.get(

@@ -18,7 +18,12 @@ export const userRegister = async ({ name, email, password }) => {
 
   const hashpassword = await hashPassword(password);
 
-  const user = await User.create({ name, email, password: hashpassword });
+  const user = await User.create({ 
+    name, 
+    email, 
+    password: hashpassword,
+    auth_provider: 'local' // Explicitly set for clarity
+  });
 
   return {
     id: user.id,
@@ -30,8 +35,22 @@ export const userRegister = async ({ name, email, password }) => {
 export const userLogin = async ({ email, password }) => {
   const user = await User.findOne({ where: { email } });
 
-  if (!user || !(await comparePassword(password, user?.password))) {
-    throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid credentials');
+  // Generic error message to prevent user enumeration (security best practice)
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid credentials');
+  }
+
+  // Check if user registered via OAuth without setting a password
+  if (user.auth_provider !== 'local' && !user.password) {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      `This account is linked with ${user.auth_provider}. Please use ${user.auth_provider} to login or set a password first.`
+    );
+  }
+
+  // Verify password (works for both local users and OAuth users who set a password)
+  if (!user.password || !(await comparePassword(password, user.password))) {
+    throw new ApiError(HTTP_STATUS.UNAUTHORIZED, 'Invalid credentials');
   }
 
   const accessToken = generateAccessToken(user.id, user.email);
@@ -164,5 +183,38 @@ export const resetPasswordService = async (
 
   return {
     message: 'Password has been reset successfully',
+  };
+};
+
+export const setPasswordForOAuthUser = async (userId: string, password: string) => {
+  const user = await User.findByPk(userId);
+
+  if (!user) {
+    throw new ApiError(HTTP_STATUS.NOT_FOUND, 'User not found');
+  }
+
+  // Check if user is OAuth user
+  if (user.auth_provider === 'local') {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'This account already uses email/password login. Use password reset if you need to change your password.'
+    );
+  }
+
+  // Check if user already has a password
+  if (user.password) {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Password already set for this account. Use password reset to change it.'
+    );
+  }
+
+  // Hash and set new password
+  const hashedPassword = await hashPassword(password);
+  user.password = hashedPassword;
+  await user.save();
+
+  return {
+    message: 'Password set successfully. You can now login with email and password.',
   };
 };
