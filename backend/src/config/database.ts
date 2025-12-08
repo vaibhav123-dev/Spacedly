@@ -24,8 +24,6 @@ const sequelize = new Sequelize(
     // Query timeouts
     dialectOptions: {
       connectTimeout: 60000, // MySQL connection timeout (60 seconds)
-      acquireTimeout: 60000, // Timeout for acquiring connections from pool
-      timeout: 60000, // Query timeout
     },
     // Connection retry configuration
     retry: {
